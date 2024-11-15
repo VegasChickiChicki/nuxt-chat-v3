@@ -1,0 +1,14 @@
+.login{
+  .header{
+    grid-column-start: 1;
+    grid-column-end: -1;
+
+    border-bottom: none;
+
+    &__wrapper{
+      padding: 0;
+
+      justify-content: flex-end;
+    }
+  }
+}

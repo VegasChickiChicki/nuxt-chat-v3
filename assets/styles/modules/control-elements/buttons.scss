@@ -1,0 +1,48 @@
+@use "../../vars/colors";
+
+.btn{
+  &-main {
+    width: auto;
+    height: 48px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: 1px solid colors.$main-color--light;
+    outline: none;
+    cursor: pointer;
+
+    font-family: 'Raleway', sans-serif;
+    font-size: 16px;
+    color: colors.$helper-color--text;
+  }
+
+  &-icon {
+    width: 48px;
+    height: 48px;
+
+    padding: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+
+    svg {
+      width: 32px;
+      height: 32px;
+
+      fill: colors.$main-color--light;
+    }
+  }
+
+  &--transparent {
+    background-color: transparent;
+    border: 1px solid colors.$main-color--light;
+  }
+}

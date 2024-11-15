@@ -1,0 +1,30 @@
+@use "../../vars/colors";
+
+.default-form{
+  width: 360px;
+  height: 480px;
+
+  padding: 24px 48px;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto 1fr;
+  grid-row-gap: 8px;
+  align-content: flex-start;
+
+  border: 1px solid colors.$main-color--light;
+  border-radius: 10px;
+
+  &__title{
+    text-align: center;
+    font-size: 24px;
+    font-weight: 500;
+    color: colors.$helper-color--text;
+  }
+
+  .btn-main{
+    margin-top: 48px;
+
+    align-self: flex-end;
+  }
+}
