@@ -1,6 +1,5 @@
 type TProps = {
-	userLogin: string,
-	userImage?: string
+	totalHeight: number
 }
 
 type TSlots = {

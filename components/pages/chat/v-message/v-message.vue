@@ -1,6 +1,7 @@
 <template>
-  <div class="chat-message" :is="props.tag">
-    <span class="chat-message__options">
+  <div class="chat-message" :is="props.tag" :data-item-id="`items-check--${props.messageId}`">
+    <div class="chat-message__content">
+      <span class="chat-message__options">
       <v-button-small
         icon="pencil-icon"
         theme="orange"
@@ -17,7 +18,7 @@
       <v-button-small icon="forward-icon" theme="blue" />
     </span>
 
-    <span class="chat-message__head">
+      <span class="chat-message__head">
       <button class="chat-message__head-user-button" type="button" @click="setPopupState(true)">
         <span class="chat-message__head-author-avatar">
           <v-user-avatar :user-image="userAvatar" :user-login="props.author.login" />
@@ -33,7 +34,7 @@
       </span>
     </span>
 
-    <span class="chat-message__images" v-if="props.messageImages.length !== 0">
+      <span class="chat-message__images" v-if="props.messageImages.length !== 0">
       <span class="chat-message__images-wrapper">
         <v-message-image
           v-for="(image, index) in props.messageImages"
@@ -43,11 +44,11 @@
       </span>
     </span>
 
-    <span class="chat-message__text" v-if="props.text.length !== 0">
+      <span class="chat-message__text" v-if="props.text.length !== 0">
       {{ props.text }}
     </span>
 
-    <span class="chat-message__statuses">
+      <span class="chat-message__statuses">
       <v-message-status
         v-for="messageStatus in props.messageStatuses"
         :key="messageStatus.id"
@@ -57,6 +58,7 @@
         @handle-click="messageUpdateStatus"
       />
     </span>
+    </div>
   </div>
 
   <teleport to="body">
@@ -69,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TProps } from './v-message.types'
+import type { TProps, TEmits } from './v-message.types'
 
 import { useChatsStore } from "~/stores/chats/chats";
 import { useUserStore } from "~/stores/user/user";
@@ -91,6 +93,7 @@ const userStore = useUserStore();
 const props = withDefaults(defineProps<TProps>(), {
   tag: 'span'
 });
+const emits = defineEmits<TEmits>();
 
 const messageDate = computed<string>(() => {
   return new Date(props.date).toLocaleString('ru-RU')
@@ -100,10 +103,10 @@ const userAvatar = computed<string | undefined>(() => {
 });
 
 const messageUpdateStatus = async (statusType: string): Promise<void> => {
-  await chatStore.messageUpdateStatus(props.chatId, props.messageId, statusType)
+  await chatStore.messageUpdateStatus(props.chatId, props.messageId, statusType);
 }
 const deleteMessage = async (): Promise<void> => {
-  await chatStore.messageDelete(props.chatId, props.messageId)
+  emits('remove-message', props.messageId);
 };
 const editMessage = async (): Promise<void> => {
   console.log('try edit message')
@@ -117,17 +120,7 @@ const editMessage = async (): Promise<void> => {
   width: 100%;
   height: auto;
 
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-
-  text-align: left;
-
-  // background-color: $main-color--light;
-  border: 1px solid $main-color--light;
-  border-radius: 10px;
-  position: relative;
+  padding: 24px 0;
 
   &:hover {
     .message-status:not(.message-status--active) {
@@ -137,6 +130,22 @@ const editMessage = async (): Promise<void> => {
     #{$this}__options {
       opacity: 1;
     }
+  }
+
+  &__content {
+    width: 100%;
+    height: auto;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+
+    text-align: left;
+
+    border: 1px solid $main-color--light;
+    border-radius: 10px;
+    position: relative;
   }
 
   &__options {

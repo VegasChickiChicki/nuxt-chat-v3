@@ -5,17 +5,20 @@
     </span>
 
     <img class="user-avatar__image" :src="props.userImage" alt="user-avatar" v-else>
+
+    <slot />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { TProps } from './v-user-avatar.types'
+import type { TProps, TSlots } from './v-user-avatar.types';
 
-const props = defineProps<TProps>()
+const props = defineProps<TProps>();
+const slots = defineSlots<TSlots>();
 
 const userDefaultAvatar = computed<string>(() => {
   return props.userLogin.split('')[0]
-})
+});
 </script>
 
 <style lang="scss">
@@ -33,6 +36,7 @@ const userDefaultAvatar = computed<string>(() => {
   aspect-ratio: 1;
   border-radius: 50%;
   border: 1px solid $main-color--light;
+  position: relative;
 
   &__default {
     font-size: 1em;

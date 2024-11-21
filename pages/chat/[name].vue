@@ -1,21 +1,28 @@
 <template>
   <div class="chat" :class="chatClasses">
     <div class="chat__wrapper">
-      <div class="chat__inner" ref="chatMain" v-if="chat">
-        <ul class="chat__list" ref="chatMainScrollArea">
-          <v-message
-            v-for="(message, index) in messages" :key="`message-${index}`"
-            :message-id="message.id"
-            :chat-id="chat.id"
-            :date="message.date"
-            :author="message.author"
-            :text="message.text"
-            :message-statuses="message.statuses"
-            :message-images="message.images"
-            tag="li"
-          />
-        </ul>
-      </div>
+      <v-virtualization-container class="chat__list" :items="messages" v-if="chat" ref="virtualizationContainer">
+        <template v-slot:default="{ itemsToShow, removeVirtualizationItem, resizeObserver }">
+          <v-virtualization-item
+            v-for="item in itemsToShow"
+            :key="item.originalItem.id"
+            :id="item.originalItem.id"
+            :position="item.virtualizationItem.position"
+            :resize-observer="resizeObserver"
+          >
+            <v-message
+              :message-id="item.originalItem.id"
+              :chat-id="chat.id"
+              :date="item.originalItem.date"
+              :author="item.originalItem.author"
+              :text="item.originalItem.text"
+              :message-statuses="item.originalItem.statuses"
+              :message-images="item.originalItem.images"
+              @remove-message="deleteMessage($event).then(() => removeVirtualizationItem($event))"
+            />
+          </v-virtualization-item>
+        </template>
+      </v-virtualization-container>
     </div>
 
     <div class="chat__helper-stage" v-if="writingUser.length > 0 && user?.login !== writingUser">
@@ -49,6 +56,8 @@
 import type { TChat, TMessage } from "~/stores/chats/chats.types";
 import type { TUser } from "~/stores/user/user.types";
 
+import VVirtualizationContainer from "~/components/kit/v-virtualization-container/v-virtualization-container.vue";
+import VVirtualizationItem from "~/components/kit/v-virtualization-item/v-virtualization-item.vue";
 import VMessage from "~/components/pages/chat/v-message/v-message.vue";
 import VChatFooter from "~/components/pages/chat/v-chat-footer/v-chat-footer.vue";
 import VFilePreview from "~/components/pages/chat/v-file-preview/v-file-preview.vue";
@@ -59,21 +68,20 @@ import { useUserStore } from "~/stores/user/user";
 const nuxtApp = useNuxtApp()
 const socket = nuxtApp.$socket;
 
-const chatsStore = useChatsStore()
-const userStore = useUserStore()
-const { chats } = storeToRefs(chatsStore)
-const { user } = storeToRefs(userStore)
+const chatsStore = useChatsStore();
+const userStore = useUserStore();
+const { chats } = storeToRefs(chatsStore);
+const { user } = storeToRefs(userStore);
 
 const loadingState = ref<boolean>(true);
 const writingUser = ref<string>('');
-const filesToPreviews = ref<File[]>([])
+const filesToPreviews = ref<File[]>([]);
 
-const chatMain = ref<HTMLDivElement | null>(null);
-const chatMainScrollArea = ref<HTMLDivElement | null>(null);
+const virtualizationContainer = ref<InstanceType<typeof VVirtualizationContainer> | null>(null);
 const chatFooter = ref<InstanceType<typeof VChatFooter> | null>(null);
 
-const route = useRoute()
-const currentChatName: string = route.params?.name as string || ''
+const route = useRoute();
+const currentChatName: string = route.params?.name as string || '';
 
 const chat = computed<TChat | null>(() => {
   return chats.value.find(el => el.name === currentChatName) || null
@@ -94,18 +102,23 @@ const messages = computed<TMessage[]>(() => {
 })
 
 const scrollChatDown = (): void => {
-  if (chatMainScrollArea.value) {
-    chatMainScrollArea.value.scrollTop = chatMainScrollArea.value.scrollHeight
+  if (virtualizationContainer.value) {
+    virtualizationContainer.value.scrollDown();
   }
 }
 const sendMessage = async (message: string): Promise<void> => {
   if (chat.value && (message.length > 0 || filesToPreviews.value.length > 0)){
-    await chatsStore.messageCreate(chat.value.id, message, filesToPreviews.value)
+    await chatsStore.messageCreate(chat.value.id, message, filesToPreviews.value).then(scrollChatDown);
 
     if (chatFooter.value) {
       chatFooter.value.clearInput();
       filesToPreviews.value = [];
     }
+  }
+};
+const deleteMessage = async (messageId: string): Promise<void> => {
+  if (chat.value) {
+    await chatsStore.messageDelete(chat.value.id, messageId);
   }
 };
 const addFileToMassage = (files: FileList): void => {
@@ -138,17 +151,13 @@ const userStopWriting = (): void => {
   }
 };
 
-watch(messages.value, () => {
-  nextTick(scrollChatDown)
-})
-
 await useAsyncData('chatMessages', async () => {
   if (chats.value.length === 0){
-    await chatsStore.getChatsList()
+    await chatsStore.getChatsList();
   }
 
   if (messages.value.length === 0 && chat.value !== null) {
-    await chatsStore.getMessagesList(chat.value?.id)
+    await chatsStore.getMessagesList(chat.value?.id);
   }
 
   return {
@@ -158,7 +167,7 @@ await useAsyncData('chatMessages', async () => {
 })
 
 onMounted(() => {
-  if (chat.value && user.value){
+  if (chat.value && user.value) {
     socket.connect();
 
     socket.emit('join-in-chat', chat.value.id);
@@ -166,6 +175,8 @@ onMounted(() => {
     socket.on('update-chat', (message: TMessage) => {
       if (chat.value) {
         chatsStore.chatAddMessage(chat.value.id, message);
+
+        nextTick(scrollChatDown);
       }
     });
 
@@ -204,18 +215,16 @@ onMounted(() => {
     });
   }
 
-  nextTick(() => {
+  setTimeout(() => {
     scrollChatDown();
 
-    setTimeout(() => {
-      loadingState.value = false;
-    }, 175)
-  });
-})
+    loadingState.value = false;
+  }, 175);
+});
 
 onBeforeUnmount(() => {
   socket.disconnect();
-})
+});
 </script>
 
 <style lang="scss">
@@ -308,19 +317,11 @@ onBeforeUnmount(() => {
     border-radius: 10px;
   }
 
-  &__inner{
-    width: 100%;
-
-    display: grid;
-    flex-direction: column;
-    align-items: center;
-  }
-
   &__list{
     width: 100%;
     height: 100%;
 
-    padding: 24px 16px 24px 16px;
+    padding: 0 8px 0 16px;
 
     display: flex;
     flex-direction: column;

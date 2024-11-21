@@ -8,6 +8,11 @@ type TProps = Omit<TMessage, 'id' | 'statuses' | 'images'> & {
 	tag?: string
 }
 
+type TEmits = {
+	(event: 'remove-message', messageId: string): void
+}
+
 export type {
-	TProps
+	TProps,
+	TEmits
 }

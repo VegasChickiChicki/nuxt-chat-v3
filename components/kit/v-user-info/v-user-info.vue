@@ -5,7 +5,9 @@
         <v-user-avatar
           :user-login="props.user.login"
           :user-image="userAvatar"
-        />
+        >
+          <v-image-preview :image="userAvatar" v-if="userAvatar" />
+        </v-user-avatar>
       </div>
 
       <div class="user-info__head-wrapper">
@@ -37,6 +39,7 @@ import type { TProps } from './v-user-info';
 import VUserAvatar from "~/components/kit/v-user-avatar/v-user-avatar.vue";
 
 import { getLastOnlineStatus } from "~/utils/getLastOnlineStatus/getLastOnlineStatus";
+import VImagePreview from "~/components/kit/v-image-preview/v-image-preview.vue";
 
 const { filesPath } = useAppConfig();
 

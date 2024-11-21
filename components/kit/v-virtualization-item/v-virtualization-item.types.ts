@@ -1,6 +1,7 @@
 type TProps = {
-	userLogin: string,
-	userImage?: string
+	position: number,
+	id: string,
+	resizeObserver: ResizeObserver | null
 }
 
 type TSlots = {

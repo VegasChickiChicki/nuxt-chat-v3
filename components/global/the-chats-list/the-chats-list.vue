@@ -67,7 +67,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Ref } from "vue"
+import type { Ref } from "vue";
+import type { TChat } from "~/stores/chats/chats.types";
 
 import TheSearchChatForm from "~/components/global/the-search-chat-form/the-search-chat-form.vue";
 import TheCreateChatForm from "~/components/global/the-create-chat-form/the-create-chat-form.vue";
@@ -77,10 +78,10 @@ import { vOnClickOutside } from '@vueuse/components';
 
 import { useChatsStore } from "~/stores/chats/chats";
 
-const chatStore = useChatsStore();
+const chatsStore = useChatsStore();
 const route = useRoute()
 
-const { foundedChats, chats } = storeToRefs(chatStore)
+const { foundedChats, chats } = storeToRefs(chatsStore)
 
 const headerOptionsTransition = ref<string>('');
 const searchChat = ref<boolean>(false);
@@ -108,7 +109,7 @@ const closeCreateChatForm = (): void => {
 }
 
 const joinInChat = async (chatId: string, chatName: string): Promise<void> => {
-  await chatStore.joinChat(chatId).then(() => {
+  await chatsStore.joinChat(chatId).then(() => {
     navigateTo(`/chat/${chatName}`);
   }).finally(closeSearchChatForm[0])
 }
@@ -125,10 +126,18 @@ const showCreateChatForm = (): void => {
 };
 
 await useAsyncData('chatsList', async () => {
-  return await chatStore.getChatsList()
+  let chatsList: TChat[] = [];
+
+  if (chats.value.length === 0) {
+    await chatsStore.getChatsList().then((response: TChat[]) => {
+      chatsList = response
+    })
+  }
+
+  return chatsList;
 }, {
-  immediate: chatStore.chats.length === 0
-})
+  immediate: chatsStore.chats.length === 0
+});
 </script>
 
 <style lang="scss">

@@ -13,7 +13,7 @@
       />
     </div>
 
-    <button class="file-preview__content" type="button" @click="setPopupState(true)">
+    <div class="file-preview__content">
       <img
         class="file-preview__content-image"
         :src="imageSrc"
@@ -21,43 +21,25 @@
         v-if="imageSrc !== null"
       />
 
-      <span class="file-preview__content-overlay">
-        <nuxt-icon class="file-preview__content-image-icon" name="eye-icon" filled />
-      </span>
-    </button>
+      <v-image-preview :image="imageSrc" v-if="imageSrc" />
+    </div>
 
     <span class="file-preview__footer">
       {{ props.image.name }}
     </span>
   </div>
-
-  <teleport to="body">
-    <transition name="popup">
-      <v-popup title="" v-if="popupState" @close-popup="setPopupState(false)">
-        <img
-          class="file-preview__popup-image"
-          :src="imageSrc"
-          alt="chat-image"
-          v-if="imageSrc !== null"
-        >
-      </v-popup>
-    </transition>
-  </teleport>
 </template>
 
 <script setup lang="ts">
 import type { TProps, TEmits } from './v-file-preview.types'
 
 import VButtonSmall from "~/components/kit/v-button-small/v-button-small.vue";
-import VPopup from "~/components/kit/v-popup/v-popup.vue";
-
-import { usePopup } from "~/composables/usePopup/usePopup";
+import VImagePreview from "~/components/kit/v-image-preview/v-image-preview.vue";
 
 const props = defineProps<TProps>()
 const emits = defineEmits<TEmits>()
 
 const imageSrc = ref<string | null>(null);
-const { popupState, setPopupState } = usePopup();
 
 if (props.image.type.startsWith('image/')) {
   const reader = new FileReader();
@@ -113,35 +95,6 @@ if (props.image.type.startsWith('image/')) {
     align-items: center;
 
     position: relative;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-
-    &:hover {
-      #{$this}__content-overlay {
-        opacity: 0.75;
-      }
-    }
-  }
-
-  &__content-overlay {
-    width: 100%;
-    height: 100%;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    z-index: 2;
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-
-    background-color: $main-color--light;
-    opacity: 0;
-    transition: opacity ease 0.25s;
   }
 
   &__content-image {
@@ -153,14 +106,6 @@ if (props.image.type.startsWith('image/')) {
     align-items: center;
 
     object-fit: contain;
-  }
-
-  &__content-image-icon {
-    svg {
-      font-size: 40px;
-
-      fill: $helper-color--text;
-    }
   }
 
   &__footer {
@@ -180,15 +125,6 @@ if (props.image.type.startsWith('image/')) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  &__popup-image {
-    width: 800px;
-    height: auto;
-
-    max-height: calc(100vh - 222px);
-
-    object-fit: cover;
   }
 }
 </style>

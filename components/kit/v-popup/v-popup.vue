@@ -1,6 +1,6 @@
 <template>
-  <div class="popup">
-    <div class="popup__wrapper" v-on-click-outside="closePopup">
+  <div class="popup" @click.self="closePopup">
+    <div class="popup__wrapper">
       <div class="popup__wrapper-head">
         <span class="popup__wrapper-head-title">
           {{ props.title }}
@@ -17,15 +17,13 @@
 </template>
 
 <script setup lang="ts">
-import type { TProps, TEmits, TSlots } from './v-popup.types'
-
-import { vOnClickOutside } from '@vueuse/components';
+import type { TProps, TEmits, TSlots } from './v-popup.types';
 
 const props = defineProps<TProps>();
 const emits = defineEmits<TEmits>();
 const slots = defineSlots<TSlots>()
 
-const closePopup = (): void => {
+const closePopup = () => {
   emits('close-popup')
 };
 </script>

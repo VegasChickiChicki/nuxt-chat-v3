@@ -72,8 +72,8 @@ export const useChatsStore = defineStore('chatsStore', () => {
 
 	const getMessagesList = async (chatId: string): Promise<TMessage[] | null> => {
 		return await nuxtApp.$api.get<TChatMessagesResponse>(`/chat/${chatId}/messages/`).then((response: AxiosResponse<TChatMessagesResponse>) => {
-			if (response.data){
-				chatSetMessages(chatId, response.data)
+			if (response.data) {
+				chatSetMessages(chatId, response.data);
 			}
 
 			return response.data
@@ -95,16 +95,17 @@ export const useChatsStore = defineStore('chatsStore', () => {
 	};
 	const messageDelete = async (chatId: string, messageId: string): Promise<void> => {
 		await nuxtApp.$api.delete(`/chat/${chatId}/messages/${messageId}`).then(() => {
-			const chat = chats.value.find((chat: TChat) => chat.id === chatId) || null
+			const chat = chats.value.find((chat: TChat) => chat.id === chatId) || null;
+			const messageIndex = chat?.messages.findIndex((message: TMessage) => message.id !== messageId) || null
 
-			if (chat) {
-				chat.messages = chat?.messages.filter((message: TMessage) => message.id !== messageId) || []
+			if (chat && messageIndex !== null) {
+				chat.messages.splice(messageIndex, 1);
 			}
 		}).catch((error: AxiosError) => {
 			console.log('error: ', error)
 		});
 	};
-	const messageCreate = async (chatId: string, messageData: string, messageImages: File[]): Promise<void> => {
+	const messageCreate = async (chatId: string, messageData: string, messageImages: File[]): Promise<TMessage> => {
 		const formData: FormData = new FormData();
 
 		formData.append('messageData', messageData);
@@ -113,15 +114,17 @@ export const useChatsStore = defineStore('chatsStore', () => {
 			formData.append('images', image);
 		})
 
-		await nuxtApp.$api.post(`/chat/${chatId}/messages/`, formData, {
+		return await nuxtApp.$api.post<TMessage>(`/chat/${chatId}/messages/`, formData, {
 			headers: {
 				'Content-Type': 'multipart/form-data'
 			}
+		}).then((response: AxiosResponse<TMessage>) => {
+			return response.data;
 		}).catch((error: AxiosError) => {
-			console.log('error: ', error)
+			return Promise.reject(error);
 		});
 	};
-	const getChatsList = async (): Promise<TChat[] | void> => {
+	const getChatsList = async (): Promise<TChat[]> => {
 		return await nuxtApp.$api.get<TChatsListResponse>('/chat/list').then((response: AxiosResponse<TChatsListResponse>) => {
 			if (response.data){
 				chats.value = response.data
