@@ -1,12 +1,14 @@
 abstract class AListNode<T extends { id: string }> {
 	item: T;
 	id: string;
+	index: number;
 	next: AListNode<T> | null = null;
 	prev: AListNode<T> | null = null;
 
-	protected constructor(item: T) {
+	protected constructor(item: T, index = 0) {
 		this.item = item;
-		this.id = item.id;
+		this.id = item.id
+		this.index = index;
 	}
 }
 

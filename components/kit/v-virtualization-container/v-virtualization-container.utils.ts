@@ -11,17 +11,15 @@ class VirtualizationList extends LinkedList<TVirtualizationItem & { id: string }
 		let left = 0;
 		let right = array.length - 1;
 
-		let counter = 0;
+		let operationsCount: number = 0;
 
 		while (left <= right) {
 			const mid: number = Math.floor((left + right) / 2);
 			const item: TVirtualizationItem & { id: string } = array[mid];
 
-			counter++;
+			operationsCount++;
 
 			if (item.item.position <= scrollTop && scrollTop < item.item.position + item.item.height) {
-				// console.clear();
-				// console.log('operations: ', counter);
 				return item;
 			} else if (scrollTop < item.item.position) {
 				right = mid - 1;
@@ -45,11 +43,7 @@ class VirtualizationList extends LinkedList<TVirtualizationItem & { id: string }
 		let count: number = 10;
 		let accumulatedHeight: number = 0;
 
-		let counter = 0;
-
 		while (current && count > 0) {
-			counter++;
-
 			if (current.prev) {
 				position = current.prev.item.position + current.prev.item.height;
 			}
@@ -65,34 +59,22 @@ class VirtualizationList extends LinkedList<TVirtualizationItem & { id: string }
 				count--;
 			}
 		}
-
-		// console.log('updated items: ', counter);
 	}
 
 	updatePositionsFromScrollTop(scrollTop: number, clientHeight: number): void {
 		const startNode: AListNode<TVirtualizationItem & { id: string }> | null = this.findByScrollTop(scrollTop);
 
-		// console.log('updatePositionsFromScrollTop');
-
 		if (startNode) {
 			this.updatePositionsFromId(startNode.id, clientHeight);
-
-			// console.clear();
-			// console.log('check: ', Array.from(this.map).map(([key, value]) => value.item.height));
 		}
 	}
 
-
 	get totalHeight(): number {
-		let totalHeight = 0;
-		let current: AListNode<TVirtualizationItem & { id: string }> | null = this.head;
-
-		while (current) {
-			totalHeight += current.item.height;
-			current = current.next;
+		if (!this.tail) {
+			return 0;
 		}
 
-		return totalHeight;
+		return this.tail.item.position + this.tail.item.height;
 	}
 }
 

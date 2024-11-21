@@ -1,14 +1,14 @@
 import { AListNode, ALinkedList } from './linkedList.types';
 
 class ListNode<T extends  { id: string }> extends AListNode<T> {
-	constructor(item: T & { id: string }) {
-		super(item);
+	constructor(item: T & { id: string }, index: number) {
+		super(item, index);
 	}
 }
 
 class LinkedList<T extends { id: string }> extends ALinkedList<T & { id: string }> {
 	add(item: T & { id: string }): void {
-		const node: AListNode<T & { id: string }> = new ListNode(item);
+		const node: AListNode<T & { id: string }> = new ListNode(item, 0);
 
 		if (!this.head) {
 			this.head = this.tail = node;
@@ -16,6 +16,8 @@ class LinkedList<T extends { id: string }> extends ALinkedList<T & { id: string 
 			this.tail!.next = node;
 			node.prev = this.tail;
 			this.tail = node;
+
+			node.index = node.prev!.index + 1
 		}
 
 		this.map.set(item.id, node);

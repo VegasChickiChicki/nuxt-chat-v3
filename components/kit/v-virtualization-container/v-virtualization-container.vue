@@ -30,6 +30,7 @@ const virtualizationContainerContent = ref<HTMLDivElement | null>(null);
 const resizeObserver = ref<ResizeObserver | null>(null);
 const virtualizationList = new VirtualizationList();
 const scrollTop = ref<number>(0);
+const scrollOrientation = ref<null | 'top' | 'bottom'>(null);
 const itemsToShow = ref<TItemToShow<T>[]>([]);
 const totalHeight = ref<number>(props.items.length * DEFAULT_POSSIBLE_HEIGHT);
 
@@ -44,11 +45,13 @@ const scrollChat = (position: number): void => {
 };
 const scrollDown = (): void => {
   if (virtualizationContainerContent.value) {
-    scrollChat(totalHeight.value);
+    scrollChat(totalHeight.value - clientHeight.value);
   }
 };
 const handleScrollTop = (scroll: Event): void => {
   const target = scroll.target as HTMLElement;
+
+  scrollTop.value < target.scrollTop ? scrollOrientation.value = 'bottom' : scrollOrientation.value = 'top';
 
   scrollTop.value = target.scrollTop;
 };
@@ -87,11 +90,17 @@ const handleResizeObserver = (entries: ResizeObserverEntry[]): void => {
     const virtualizationItem: AListNode<TVirtualizationItem> | null = virtualizationList.find(entry.target.$id);
 
     if (virtualizationItem && virtualizationItem?.item.height !== entry.contentRect.height) {
+      const heightDiffirence: number = virtualizationItem.item.height - entry.contentRect.height;
+
       virtualizationItem.item.height = entry.contentRect.height;
 
       virtualizationList.updatePositionsFromId(entry.target.$id);
 
       totalHeight.value = virtualizationList.totalHeight;
+
+      if (scrollOrientation.value === 'top') {
+        scrollChat(scrollTop.value - heightDiffirence);
+      }
     }
   }
 };
@@ -104,20 +113,8 @@ const initResizeObserver = (): void => {
 const updateVisibleItems = (): void => {
   const result: TItemToShow<T>[] = [];
   let accumulatedHeight: number = 0;
-  let visibleHeight: number = -SCROLL_OFFSET;
-  let startIndex: number = 0;
-
-  for (let i = 0; i < props.items.length; i++) {
-    const blockHeight: number = virtualizationList.find(props.items[i].id)?.item.height || DEFAULT_POSSIBLE_HEIGHT;
-
-    if (accumulatedHeight + blockHeight > (scrollTop.value - SCROLL_OFFSET)) {
-      startIndex = i;
-
-      break;
-    }
-
-    accumulatedHeight += blockHeight;
-  }
+  let visibleHeight: number = 0;
+  let startIndex: number = virtualizationList.findByScrollTop(scrollTop.value - SCROLL_OFFSET)?.index || 0;
 
   for (let i = startIndex; i < props.items.length; i++) {
     if (visibleHeight >= clientHeight.value + SCROLL_OFFSET) {
@@ -126,7 +123,7 @@ const updateVisibleItems = (): void => {
 
     result.push({
       originalItem: props.items[i],
-      virtualizationItem: virtualizationList.find(props.items[i].id)?.item || initVirtualizationItem(props.items[i].id, visibleHeight).item
+      virtualizationItem: virtualizationList.find(props.items[i].id)?.item || initVirtualizationItem(props.items[i].id, i === 0 ? 0 : virtualizationList.find(props.items[i - 1].id)?.item.position).item
     });
 
     if ((virtualizationList.find(props.items[i].id)?.item.position || 0) > scrollTop.value) {
@@ -150,8 +147,8 @@ watch(() => scrollTop.value, (scroll: number) => {
   updateVisibleItems();
   virtualizationList.updatePositionsFromScrollTop(scroll, clientHeight.value);
 });
-watch(() => props.items, () => {
-  updateVisibleItems();
+watch(() => props.items, updateVisibleItems, {
+  deep: true
 });
 
 onMounted(() => {

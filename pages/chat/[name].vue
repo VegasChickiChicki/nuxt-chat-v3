@@ -108,7 +108,7 @@ const scrollChatDown = (): void => {
 }
 const sendMessage = async (message: string): Promise<void> => {
   if (chat.value && (message.length > 0 || filesToPreviews.value.length > 0)){
-    await chatsStore.messageCreate(chat.value.id, message, filesToPreviews.value).then(scrollChatDown);
+    await chatsStore.messageCreate(chat.value.id, message, filesToPreviews.value);
 
     if (chatFooter.value) {
       chatFooter.value.clearInput();
@@ -123,11 +123,11 @@ const deleteMessage = async (messageId: string): Promise<void> => {
 };
 const addFileToMassage = (files: FileList): void => {
   Array.from(files).forEach((file: File) => {
-    filesToPreviews.value.push(file)
+    filesToPreviews.value.push(file);
   })
 
   setTimeout(() => {
-    scrollChatDown()
+    scrollChatDown();
   }, 100)
 };
 const removeFileFromMessage = (fileName: string) => {
@@ -176,7 +176,7 @@ onMounted(() => {
       if (chat.value) {
         chatsStore.chatAddMessage(chat.value.id, message);
 
-        nextTick(scrollChatDown);
+        setTimeout(scrollChatDown, 0);
       }
     });
 
