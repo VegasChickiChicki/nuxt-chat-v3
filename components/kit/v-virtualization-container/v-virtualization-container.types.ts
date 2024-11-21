@@ -29,7 +29,7 @@ type TExpose = {
 }
 
 abstract class AVirtualizationList<T extends { id: string }> extends ALinkedList<T> {
-	abstract findByScrollTop(scrollTop: number): T & { id: string };
+	abstract findByScrollTop(scrollTop: number): T;
 	abstract updatePositionsFromId(id: string, clientHeight: number): void;
 	abstract updatePositionsFromScrollTop(scrollTop: number, clientHeight: number): void;
 

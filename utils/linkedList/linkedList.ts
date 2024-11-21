@@ -6,9 +6,9 @@ class ListNode<T extends  { id: string }> extends AListNode<T> {
 	}
 }
 
-class LinkedList<T extends { id: string }> extends ALinkedList<T & { id: string }> {
-	add(item: T & { id: string }): void {
-		const node: AListNode<T & { id: string }> = new ListNode(item, 0);
+class LinkedList<T extends { id: string }> extends ALinkedList<T> {
+	add(item: T): void {
+		const node: AListNode<T> = new ListNode(item, 0);
 
 		if (!this.head) {
 			this.head = this.tail = node;
@@ -24,7 +24,7 @@ class LinkedList<T extends { id: string }> extends ALinkedList<T & { id: string 
 	}
 
 	remove(id: string): void {
-		const node: AListNode<T & { id: string }> | undefined = this.map.get(id);
+		const node: AListNode<T> | undefined = this.map.get(id);
 
 		if (!node) {
 			return;
@@ -45,8 +45,8 @@ class LinkedList<T extends { id: string }> extends ALinkedList<T & { id: string 
 		this.map.delete(id);
 	}
 
-	find(id: string): AListNode<T & { id: string }> | null {
-		const node: AListNode<T & { id: string }> | null = this.map.get(id) || null;
+	find(id: string): AListNode<T> | null {
+		const node: AListNode<T> | null = this.map.get(id) || null;
 
 		return node;
 	}

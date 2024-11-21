@@ -22,7 +22,7 @@ abstract class ALinkedList<T extends { id: string }> {
 		this.map = new Map();
 	}
 
-	abstract add(item: T & { id: string }): void;
+	abstract add(item: T): void;
 	abstract remove(id: string): void;
 	abstract find(id: string): AListNode<T> | null;
 }
