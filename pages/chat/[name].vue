@@ -84,7 +84,7 @@ const route = useRoute();
 const currentChatName: string = route.params?.name as string || '';
 
 const chat = computed<TChat | null>(() => {
-  return chats.value.find(el => el.name === currentChatName) || null
+  return chats.value.find((chat: TChat) => chat.name === currentChatName) || null;
 })
 const chatClasses = computed<Record<string, boolean>>(() => {
   return {
@@ -94,8 +94,8 @@ const chatClasses = computed<Record<string, boolean>>(() => {
 const messages = computed<TMessage[]>(() => {
   if (chat.value){
     return chats.value.find((currentChat: TChat) => {
-      return currentChat.id === chat.value?.id
-    })?.messages || []
+      return currentChat.id === chat.value.id
+    })?.messages || [];
   }
 
   return [];
@@ -176,7 +176,7 @@ onMounted(() => {
       if (chat.value) {
         chatsStore.chatAddMessage(chat.value.id, message);
 
-        setTimeout(scrollChatDown, 0);
+        setTimeout(scrollChatDown, 10);
       }
     });
 
@@ -224,6 +224,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   socket.disconnect();
+  socket.removeAllListeners();
 });
 </script>
 

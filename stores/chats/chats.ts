@@ -22,10 +22,10 @@ export const useChatsStore = defineStore('chatsStore', () => {
 		}
 	};
 	const chatAddMessage = (chatId: string, message: TMessage): void => {
-		const chat: TChat | null = chats.value.find((chat: TChat) => chat.id === chatId) || null
+		const chat: TChat | null = chats.value.find((chat: TChat) => chat.id === chatId) || null;
 
 		if (chat) {
-			chat.messages.push(message)
+			chat.messages.push(message);
 		}
 	};
 	const chatDeleteMessage = (chatId: string, messageId: string): void => {
