@@ -16,6 +16,10 @@ type TProps<T> = {
 	items: T[],
 };
 
+type TEmits = {
+	(event: 'scroll', scroll: number): void
+}
+
 type TSlots<T> = {
 	default(args: {
 		itemsToShow: UnwrapRefSimple<TItemToShow<T>[]>,
@@ -30,8 +34,8 @@ type TExpose = {
 
 abstract class AVirtualizationList<T extends { id: string }> extends ALinkedList<T> {
 	abstract findByScrollTop(scrollTop: number): T;
-	abstract updatePositionsFromId(id: string, clientHeight: number): void;
-	abstract updatePositionsFromScrollTop(scrollTop: number, clientHeight: number): void;
+	abstract updatePositionsFromId(id: string): void;
+	abstract updatePositionsFromScrollTop(scrollTop: number): void;
 
 	abstract get totalHeight(): number;
 }
@@ -40,6 +44,7 @@ export type {
 	TItemToShow,
 	TVirtualizationItem,
 	TProps,
+	TEmits,
 	TSlots,
 	TExpose
 }

@@ -13,16 +13,17 @@
 </template>
 
 <script setup lang="ts" generic="T extends { id: string }">
-import type { TProps, TSlots, TExpose, TItemToShow } from './v-virtualization-container.types';
+import type { TProps, TEmits, TSlots, TExpose, TItemToShow } from './v-virtualization-container.types';
 import type { TVirtualizationItem } from "./v-virtualization-container.types";
 import type { AListNode } from "~/utils/linkedList/linkedList.types";
 
-import { DEFAULT_POSSIBLE_HEIGHT, SCROLL_OFFSET } from '~/stores/virtualization/virtualization.constants';
+import { DEFAULT_POSSIBLE_HEIGHT, VIRTUALIZATION_SCROLL_OFFSET } from './v-virtualization-container.constants';
 import { VirtualizationList } from './v-virtualization-container.utils'
 
 import VVirtualizationList from "~/components/kit/v-virtualization-list/v-virtualization-list.vue";
 
 const props = defineProps<TProps<T>>();
+const emits = defineEmits<TEmits>();
 const slots = defineSlots<TSlots<T>>();
 
 const virtualizationContainer = ref<HTMLDivElement | null>(null);
@@ -54,6 +55,8 @@ const handleScrollTop = (scroll: Event): void => {
   scrollTop.value < target.scrollTop ? scrollOrientation.value = 'bottom' : scrollOrientation.value = 'top';
 
   scrollTop.value = target.scrollTop;
+
+  emits('scroll', scrollTop.value);
 };
 const initVirtualizationItem = (id: string, position: number): AListNode<TVirtualizationItem & { id: string }> => {
   virtualizationList.add({
@@ -68,7 +71,7 @@ const initVirtualizationItems = (): void => {
   let position: number = 0;
 
   props.items.forEach((item: T) => {
-    initVirtualizationItem(item.id, position)
+    initVirtualizationItem(item.id, position);
 
     position += DEFAULT_POSSIBLE_HEIGHT;
   });
@@ -80,17 +83,17 @@ const removeVirtualizationItem = (id: string): void => {
     virtualizationList.remove(id);
 
     if (prevItem) {
-      virtualizationList.updatePositionsFromId(prevItem.id, clientHeight.value);
+      virtualizationList.updatePositionsFromId(prevItem.id);
       totalHeight.value = virtualizationList.totalHeight;
     }
   }
 };
 const handleResizeObserver = (entries: ResizeObserverEntry[]): void => {
   for (const entry of entries) {
-    const virtualizationItem: AListNode<TVirtualizationItem> | null = virtualizationList.find(entry.target.$id);
+    const virtualizationItem: AListNode<TVirtualizationItem & { id: string }> | null = virtualizationList.find(entry.target.$id);
 
     if (virtualizationItem && virtualizationItem?.item.height !== entry.contentRect.height) {
-      const heightDiffirence: number = virtualizationItem.item.height - entry.contentRect.height;
+      const heightDifference: number = virtualizationItem.item.height - entry.contentRect.height;
 
       virtualizationItem.item.height = entry.contentRect.height;
 
@@ -99,7 +102,7 @@ const handleResizeObserver = (entries: ResizeObserverEntry[]): void => {
       totalHeight.value = virtualizationList.totalHeight;
 
       if (scrollOrientation.value === 'top') {
-        scrollChat(scrollTop.value - heightDiffirence);
+        scrollChat(scrollTop.value - heightDifference);
       }
     }
   }
@@ -109,15 +112,14 @@ const initResizeObserver = (): void => {
     resizeObserver.value = new ResizeObserver(handleResizeObserver);
   }
 };
-
 const updateVisibleItems = (): void => {
   const result: TItemToShow<T>[] = [];
-  let accumulatedHeight: number = 0;
+
   let visibleHeight: number = 0;
-  let startIndex: number = virtualizationList.findByScrollTop(scrollTop.value - SCROLL_OFFSET)?.index || 0;
+  let startIndex: number = virtualizationList.findByScrollTop(scrollTop.value - VIRTUALIZATION_SCROLL_OFFSET)?.index || 0;
 
   for (let i = startIndex; i < props.items.length; i++) {
-    if (visibleHeight >= clientHeight.value + SCROLL_OFFSET) {
+    if (visibleHeight >= clientHeight.value + VIRTUALIZATION_SCROLL_OFFSET) {
       break;
     }
 
@@ -129,23 +131,17 @@ const updateVisibleItems = (): void => {
     if ((virtualizationList.find(props.items[i].id)?.item.position || 0) > scrollTop.value) {
       visibleHeight += (virtualizationList.find(props.items[i].id)?.item.height || DEFAULT_POSSIBLE_HEIGHT);
     }
+
+    console.clear();
+    console.log('visibleHeight: ', visibleHeight)
   }
 
   itemsToShow.value = result;
 };
-const updateVirtualizationItemHeight = (id: string, height: number): void => {
-  const virtualizationItem: AListNode<TVirtualizationItem & { id: string }> | null = virtualizationList.find(id) || null;
-
-  if (virtualizationItem && (virtualizationItem.item.height !== height)) {
-    virtualizationItem.item.height = height;
-
-    totalHeight.value = virtualizationList.totalHeight;
-  }
-};
 
 watch(() => scrollTop.value, (scroll: number) => {
   updateVisibleItems();
-  virtualizationList.updatePositionsFromScrollTop(scroll, clientHeight.value);
+  virtualizationList.updatePositionsFromScrollTop(scroll);
 });
 watch(() => props.items, updateVisibleItems, {
   deep: true
